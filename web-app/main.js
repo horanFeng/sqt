@@ -72,6 +72,10 @@ const update_grid = function () {
     );
 
     // Add code below to display the score information.
+document.getElementById("score").innerText = game.score.score;
+document.getElementById("lines").innerText = game.score.lines_cleared;
+document.getElementById("level").innerText = Score.level(game.score);
+
 
 };
 
@@ -105,11 +109,15 @@ document.body.onkeydown = function (event) {
 const timer_function = function () {
     game = Tetris.next_turn(game);
     update_grid();
-    setTimeout(timer_function, 500);
+    const level = Score.level(game.score);
+    const nextTurnTime = 2500 / (level + 4);
+    setTimeout(timer_function, nextTurnTime);
 };
 
 // This first timeout starts the game. it's only called once.
 // From here on the timer_function above is called.
-setTimeout(timer_function, 500);
+setTimeout(timer_function, 2500 / (Score.level(game.score) + 4));
 
 update_grid();
+
+

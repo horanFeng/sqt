@@ -213,6 +213,11 @@ Tetris.Z_tetromino = Object.freeze({
 });
 
 const empty_block = " ";
+Tetris.new_line = function() {
+    return new Array(10).fill(empty_block);
+};
+const filled_line = new Array(10).fill(Tetris.I_tetromino.block_type);
+
 
 const all_tetrominos = [
     Tetris.I_tetromino,
@@ -296,10 +301,12 @@ Tetris.new_game = function () {
         "field": new_field(),
         "game_over": false,
         "next_tetromino": next_tetromino,
-        "position": starting_position,
+        "position": starting_position,  // Here
         "score": Score.new_score()
     };
 };
+
+
 
 /**
  * For a given tetromino and position,
@@ -313,7 +320,10 @@ Tetris.new_game = function () {
  * @returns {number[][]} The List of  coordinates `[x, y]` of each block.
  */
 Tetris.tetromino_coordiates = function (tetromino, position) {
-    return tetromino.grid.flatMap(function (row, row_index) {
+    console.log("Tetromino: ", tetromino);  // log the input tetromino
+    console.log("Position: ", position);  // log the input position
+
+    const coords = tetromino.grid.flatMap(function (row, row_index) {
         return row.flatMap(function (block, column_index) {
             if (block === empty_block) {
                 return [];
@@ -324,7 +334,12 @@ Tetris.tetromino_coordiates = function (tetromino, position) {
             ]];
         });
     });
+
+    console.log("Calculated Coords: ", coords);  // log the calculated coords
+
+    return coords;
 };
+
 
 const is_blocked_bottom = function (tetromino, position) {
     return Tetris.tetromino_coordiates(tetromino, position).some(
@@ -440,7 +455,7 @@ const rotate_tetromino_ccw = function (tetromino) {
  * @param {Tetris.Game} game The initial state of a game.
  * @returns {Tetris.Game} The state after a CW rotation is attempted.
  */
-Tetris.rotate_cw = function (game) {
+Tetris.rotate_cw = function (game) { 
     if (Tetris.is_game_over(game)) {
         return game;
     }
@@ -474,10 +489,12 @@ Tetris.rotate_ccw = function (game) {
 const descend = function (game) {
     const new_position = [game.position[0], game.position[1] + 1];
     if (is_blocked(game.field, game.current_tetromino, new_position)) {
-        return game;
+      
+        return { ...game, cannotDescend: true, softDropEnd: true };
     }
-    return R.mergeRight(game, {"position": new_position});
+    return R.mergeRight(game, { "position": new_position, cannotDescend: false });
 };
+
 
 /**
  * Attempt to perform a soft drop, where the piece descends one position.
@@ -492,7 +509,15 @@ Tetris.soft_drop = function (game) {
     if (Tetris.is_game_over(game)) {
         return game;
     }
-    return descend(game);
+    const dropped_once = descend(game);
+    if (dropped_once.cannotDescend) {
+        delete dropped_once.cannotDescend; 
+        dropped_once.score = Score.add_points(1, dropped_once.score); 
+        dropped_once.dropCount = (dropped_once.dropCount || 0) + 1; 
+        return Tetris.next_turn(dropped_once); 
+    }
+    dropped_once.dropCount = (dropped_once.dropCount || 0) + 1; 
+    return dropped_once;
 };
 
 /**
@@ -505,43 +530,80 @@ Tetris.soft_drop = function (game) {
  * @param {Tetris.Game} game The initial state of a game.
  * @returns {Tetris.Game} The state after a soft drop is attempted.
  */
-Tetris.hard_drop = function (game) {
+Tetris.hard_drop = function (game, dropCount = 0) {
     if (Tetris.is_game_over(game)) {
         return game;
     }
     const dropped_once = descend(game);
-    if (R.equals(game, dropped_once)) {
-        return Tetris.next_turn(game);
+    if (dropped_once.cannotDescend) {
+        delete dropped_once.cannotDescend; 
+        dropped_once.score = Score.add_points(dropCount * 2, dropped_once.score); 
+        dropped_once.dropCount = dropCount; 
+        dropped_once.hardDrop = true; 
+        return Tetris.next_turn(dropped_once); 
     }
-    return Tetris.hard_drop(dropped_once);
+    return Tetris.hard_drop(dropped_once, dropCount + 1);
 };
 
-const lose = R.set(R.lensProp("game_over"), true);
 
-const lock = function (game) {
-    const updated_field = R.clone(game.field);
-    const coords = Tetris.tetromino_coordiates(
-        game.current_tetromino,
-        game.position
-    );
-    coords.forEach(function (coord) {
-        updated_field[coord[1]][coord[0]] = game.current_tetromino.block_type;
+
+/**
+ * Locks the current tetromino in the game field. This function is used when the current tetromino cannot 
+ * descend anymore and needs to be fixed in the field. The coordinates of the current tetromino are calculated,
+ * and then its blocks are added to the field at the corresponding positions.
+ *
+ * @function
+ * @memberof Tetris
+ * @param {Tetris.Game} game - The current game state.
+ * @returns {Array.<Array.<Tetris.BlockType>>} The updated field after locking the current tetromino in place.
+ */
+Tetris.lock_tetromino = function (game) {
+    const tetromino_coords = Tetris.tetromino_coordiates(game.current_tetromino, game.position);
+
+    // Create a deep copy of game.field
+    const updated_field = game.field.map(function(row) {
+        return row.slice();
     });
-    return updated_field;
+
+    for (let coord of tetromino_coords) {
+        // Check that coord contains valid numbers
+        if (isNaN(coord[0]) || isNaN(coord[1])) {
+            console.error("Invalid coord: ", coord);
+            continue;  // Skip to next iteration
+        }
+
+        // Check that updated_field[coord[1]] exists before using it
+        if (!updated_field[coord[1]]) {
+            console.error("Invalid index: ", coord[1]);
+            continue;  // Skip to next iteration
+        }
+
+        updated_field[coord[1]][coord[0]] = game.current_tetromino.block_type;
+    }
+
+    // Return a new game state with updated field
+    return {
+        ...game,
+        field: updated_field,
+    };
 };
 
-const is_complete_line = (line) => !line.some((block) => block === empty_block);
 
-const pad_field = function (short_field) {
-    const missing_row_count = Tetris.field_height - short_field.length;
-    const new_rows = R.times(new_line, missing_row_count);
-    return [...new_rows, ...short_field];
+/**
+ * Clears completed lines from the game field.
+ * It checks every line in the field, if a line is full (no empty blocks), it will be removed.
+ * For every line removed, an empty line is added at the top of the field.
+ * @function
+ * @memberof Tetris
+ * @param {Array.<Array.<Tetris.BlockType>>} field - The game field to clear lines from.
+ * @returns {Array} - A two-element array. The first element is the updated field, the second element is the count of lines cleared.
+ */
+Tetris.clear_lines = function (field) {
+    const new_field = field.filter(line => !line.every(block => block !== empty_block));
+    const cleared_lines_count = field.length - new_field.length;
+    const empty_lines = Array(cleared_lines_count).fill(new_line());
+    return [empty_lines.concat(new_field), cleared_lines_count];
 };
-
-const clear_lines = R.pipe(
-    R.reject(is_complete_line),
-    pad_field
-);
 
 /**
  * next_turn advances the Tetris game.
@@ -556,8 +618,6 @@ const clear_lines = R.pipe(
  * @returns {Tetris.Game}
  */
 Tetris.next_turn = function (game) {
-    console.log(game);
-
     if (game.game_over) {
         return game;
     }
@@ -568,35 +628,66 @@ Tetris.next_turn = function (game) {
         return descended;
     }
 
-    // Is the current piece on top of a locked in piece?
-    // I.e. it's just been deployed and something is in the way.
-    // In this case, lose the game.
-    if (is_blocked_by_geometry(
-        game.field,
-        game.current_tetromino,
-        game.position
-    )) {
-        return lose(game);
+    // If soft drop has ended, add 1 point to the score
+    if (game.softDropEnd && !game.hardDrop) {
+        game.score = Score.add_points(1, game.score);
+        game.softDropEnd = false;
     }
 
-    // Otherwise, we can't descend and we've not lost,
-    // So lock the current piece in place and deploy the next.
-    const locked_field = lock(game);
+    // Reset hard drop flag
+    if (game.hardDrop) {
+        game.hardDrop = false;
+    }
 
-    const cleared_field = clear_lines(locked_field);
+    // Check if the current piece is blocked.
+    if (is_blocked_by_geometry(game.field, game.current_tetromino, game.position)) {
+        return Tetris.lose(game);
+    }
 
-    const [next_tetromino, bag] = game.bag();
+    // Otherwise, lock the current piece in place, clear lines, and deploy the next.
+    const locked_game = Tetris.lock_tetromino(game);
+    const [cleared_field, cleared_lines_count] = Tetris.clear_lines(locked_game.field);
+
+    const new_score = Score.cleared_lines(cleared_lines_count, game.score);
+
+    // Only generate the next tetromino after the current tetromino has been locked and lines cleared
+    const [current_tetromino, new_bag] = game.bag();
+
+    if (is_blocked_by_geometry(cleared_field, current_tetromino, starting_position)) {
+        return Tetris.lose(game);
+    }
+
+    const [next_tetromino, new_new_bag] = new_bag();
 
     return {
-        "bag": bag,
-        "current_tetromino": game.next_tetromino,
+        ...game,
+        "bag": new_new_bag,
+        "current_tetromino": current_tetromino,
         "field": cleared_field,
         "game_over": false,
         "next_tetromino": next_tetromino,
         "position": starting_position,
-        "score": game.score
+        "score": new_score
     };
 };
+
+/**
+ * This function is used when the game is over. It returns a new game state 
+ * with the "game_over" property set to true.
+ *
+ * @function
+ * @memberof Tetris
+ * @param {Tetris.Game} game - The current state of the game.
+ * @returns {Tetris.Game} A new game state with the "game_over" property set to true.
+ */
+Tetris.lose = function (game) {
+    return {
+        ...game,
+        "game_over": true
+    };
+};
+
+
 
 /**
  * @function
@@ -604,8 +695,15 @@ Tetris.next_turn = function (game) {
  * @param {Tetris.Game} game The game to check is over or in play.
  * @returns {boolean} Whether the game is over or not.
  */
+let game = Tetris.new_game();
 Tetris.is_game_over = function (game) {
-    return game.game_over;
+    if (game.game_over) {
+        document.getElementById('final-score').innerText = 'Your final score: ' + game.score.score;
+        document.getElementById('game-over').style.display = 'block';
+        return true;
+    }
+    return false;
 };
 
 export default Object.freeze(Tetris);
+
