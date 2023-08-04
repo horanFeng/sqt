@@ -1,42 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <meta charset="utf-8">
-    <title>Score.js - Documentation</title>
-    
-    
-    <script src="scripts/prettify/prettify.js"></script>
-    <script src="scripts/prettify/lang-css.js"></script>
+    <title>JSDoc: Source: Score.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
-    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
-    <script src="scripts/nav.js" defer></script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
 </head>
+
 <body>
 
-<input type="checkbox" id="nav-trigger" class="nav-trigger" />
-<label for="nav-trigger" class="navicon-button x">
-  <div class="navicon"></div>
-</label>
-
-<label for="nav-trigger" class="overlay"></label>
-
-<nav >
-    
-    
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="Score.html">Score</a><ul class='methods'><li data-type='method'><a href="Score.html#.new_score">new_score</a></li></ul></li><li><a href="Tetris.html">Tetris</a><ul class='methods'><li data-type='method'><a href="Tetris.html#.hard_drop">hard_drop</a></li><li data-type='method'><a href="Tetris.html#.is_game_over">is_game_over</a></li><li data-type='method'><a href="Tetris.html#.left">left</a></li><li data-type='method'><a href="Tetris.html#.new_game">new_game</a></li><li data-type='method'><a href="Tetris.html#.next_turn">next_turn</a></li><li data-type='method'><a href="Tetris.html#.right">right</a></li><li data-type='method'><a href="Tetris.html#.rotate_ccw">rotate_ccw</a></li><li data-type='method'><a href="Tetris.html#.rotate_cw">rotate_cw</a></li><li data-type='method'><a href="Tetris.html#.soft_drop">soft_drop</a></li><li data-type='method'><a href="Tetris.html#.tetromino_coordiates">tetromino_coordiates</a></li></ul></li></ul>
-    
-</nav>
-
 <div id="main">
-    
-    <h1 class="page-title">Score.js</h1>
-    
+
+    <h1 class="page-title">Source: Score.js</h1>
 
     
 
@@ -47,53 +28,104 @@
         <article>
             <pre class="prettyprint source linenums"><code>/**
  * @namespace Score
- * @author A. Freddie Page
- * @version 2022.23
+ * @author Feng Haoran
+ * @version 2023.8
  * This module provides the scoring system for a Tetris Game.
  */
-const Score = {};
+const Score = {};  //defined an empty object called Score
 
 /**
- * The score object contains information about the score of the game.
- * Currently it is implemented as a single number,
- * but could include other information such as the number of lines cleared.
- * @typedef {number} Score
+ * The score object contains information about the score of the game and the number of lines cleared.
+ * @typedef {Object} Score
+ * @property {number} score - The score of the game
+ * @property {number} lines_cleared - The number of lines cleared
  * @memberof Score
  */
 
 /**
- * Returns a game state for a new Tetris Game.
+ * Returns a score object for a new Tetris Game.
  * @function
  * @memberof Score
- * @returns {Score.Score} The new game.
+ * @returns {Score.Score} The new score object.
  */
-Score.new_score = function () {
-    return 0;
+Score.new_score = function () {   //generate a new score object
+    return {  //return the property of the object
+        score: 0, 
+        lines_cleared: 0,
+        last_clear_was_tetris: false,  
+    };
 };
 
-export default Object.freeze(Score);
-</code></pre>
+
+/**
+ * Returns the current level of the game based on the number of lines cleared.
+ * Start at level 1, and advance a level every 10 lines cleared.
+ * @function
+ * @memberof Score
+ * @param {Score.Score} score - The score object
+ * @returns {number} The current level
+ */
+Score.level = function (score) {
+    return Math.floor(score.lines_cleared / 10) + 1;  //the level will advance 1 every 10 lines are cleared 
+};
+
+
+Score.cleared_lines = function(lines, score) { //used to update scoring object
+    let points;
+    switch (lines) {
+        case 1:
+            points = 100 * Score.level(score);
+            break;
+        case 2:
+            points = 300 * Score.level(score);
+            break;
+        case 3:
+            points = 500 * Score.level(score);
+            break;
+        case 4:
+            points = (score.last_clear_was_tetris ? 1200 : 800) * Score.level(score);
+            break;
+        default:
+            points = 0;
+            break;
+    }
+    return { //return a new object with updated properties
+        ...score,
+        score: score.score + points,
+        lines_cleared: score.lines_cleared + lines,
+        last_clear_was_tetris: lines === 4,
+    };
+};
+
+Score.add_points = function(points, score) {
+    return {
+        ...score,
+        score: score.score + points
+    };
+};
+
+
+
+export default Object.freeze(Score); //freeze</code></pre>
         </article>
     </section>
 
 
 
 
-    
-    
 </div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="Score.html">Score</a></li></ul>
+</nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Fri Jul 28 2023 13:54:55 GMT+0100 (British Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Aug 04 2023 10:28:24 GMT+0800 (中国标准时间)
 </footer>
 
-<script>prettyPrint();</script>
-<script src="scripts/polyfill.js"></script>
-<script src="scripts/linenumber.js"></script>
-
-
-
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
 </body>
 </html>

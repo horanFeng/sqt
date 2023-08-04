@@ -1,7 +1,7 @@
 /**
  * @namespace Score
- * @author A. Freddie Page
- * @version 2022.23
+ * @author Feng Haoran
+ * @version 2023.8
  * This module provides the scoring system for a Tetris Game.
  */
 const Score = {};  //defined an empty object called Score

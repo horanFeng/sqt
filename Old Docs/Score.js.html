@@ -1,9 +1,9 @@
-<!DOCTYPE html>score
+<!DOCTYPE html>
 <html lang="en">
 <head>
     
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>Score.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,31 +35,46 @@
 
 <div id="main">
     
+    <h1 class="page-title">Score.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @namespace Score
+ * @author A. Freddie Page
+ * @version 2022.23
+ * This module provides the scoring system for a Tetris Game.
+ */
+const Score = {};
 
+/**
+ * The score object contains information about the score of the game.
+ * Currently it is implemented as a single number,
+ * but could include other information such as the number of lines cleared.
+ * @typedef {number} Score
+ * @memberof Score
+ */
 
-    <section class="package">
-        <h3> </h3>		
+/**
+ * Returns a game state for a new Tetris Game.
+ * @function
+ * @memberof Score
+ * @returns {Score.Score} The new game.
+ */
+Score.new_score = function () {
+    return 0;
+};
+
+export default Object.freeze(Score);
+</code></pre>
+        </article>
     </section>
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
 
 
 
