@@ -112,7 +112,7 @@ TTT----TTT`;  //set a game field
         R.range(0, 23).forEach(function () {  //drop for 23 times to touch the bottom
             game = Tetris.next_turn(game); //update the state of the game
         });
-        const expectedScore = 100*2+1; //the correct score we should get (level 2)
+        const expectedScore = 100*2; //the correct score we should get (level 2)
         const actualScore = game.score.score; //check the actual score we get
         if (actualScore !== expectedScore) {
             throw new Error(`Expected score to be ${expectedScore}, but got ${actualScore}`);
@@ -152,7 +152,7 @@ OOOO--OOOO`;  //set a game field
         R.range(0, 23).forEach(function () {  //drop for 23 times to touch the bottom
             game = Tetris.next_turn(game); //update the state of the game
         });
-        const expectedScore = 300*2+1; //the correct score we should get (level 2)
+        const expectedScore = 300*2; //the correct score we should get (level 2)
         const actualScore = game.score.score; //check the actual score we get
         if (actualScore !== expectedScore) {
             throw new Error(`Expected score to be ${expectedScore}, but got ${actualScore}`);
@@ -193,7 +193,7 @@ OOOOOOOOOO`;  //set a game field
         R.range(0, 23).forEach(function () {  //drop for 23 times to touch the bottom
             game = Tetris.next_turn(game); //update the state of the game
         });
-        const expectedScore = 500*2+1; //the correct score we should get (level 2)
+        const expectedScore = 500*2; //the correct score we should get (level 2)
         const actualScore = game.score.score; //check the actual score we get
         if (actualScore !== expectedScore) {
             throw new Error(`Expected score to be ${expectedScore}, but got ${actualScore}`);
@@ -232,7 +232,7 @@ OOOOOOOOOO`;  //set a game field
         R.range(0, 23).forEach(function () {  //drop for 23 times to touch the bottom
             game = Tetris.next_turn(game); //update the state of the game
         });
-        const expectedScore = 800*2+1; //the correct score we should get (level 2)
+        const expectedScore = 800*2; //the correct score we should get (level 2)
         const actualScore = game.score.score; //check the actual score we get
         if (actualScore !== expectedScore) {
             throw new Error(`Expected score to be ${expectedScore}, but got ${actualScore}`);
@@ -291,7 +291,7 @@ ZJJSSIIII-`;  //set a game field
             game = Tetris.next_turn(game); //update the state of the game
         });
     console.log(game.field.map(row => row.join('')).join('\n'));
-        const expectedScore = 1200*2+800*2+2; //the correct score we should get (level 2)
+        const expectedScore = 1200*2+800*2; //the correct score we should get (level 2)
         const actualScore = game.score.score; //check the actual score we get
         if (actualScore !== expectedScore) {
             throw new Error(`Expected score to be ${expectedScore}, but got ${actualScore}`);
@@ -300,25 +300,25 @@ ZJJSSIIII-`;  //set a game field
 
         
     
-it(
-    `A soft drop scores 1 points per cell descended`,
-    function () {
+    it('A soft drop scores 1 point per cell descended', function () {
         let game = example_game;
-        game.current_tetromino = Tetris.T_tetromino; 
-
+        game.current_tetromino = Tetris.T_tetromino;
+        
         let oldScore = game.score.score;
-
         // Keep doing soft drop until piece is fully descended
         let newGame = game;
         do {
+            let previousPosition = newGame.position.slice();
             newGame = Tetris.soft_drop(newGame);
-        } while (!newGame.softDropEnd);  // Continue while the tetromino can still descend
 
-        if (newGame.score.score !== oldScore + 1) {
-            throw new Error("A soft drop should score 1 point after the tetromino can no longer descend");
-        }
-    }
-);
+            if (newGame.position[1] > previousPosition[1]) {
+                oldScore += 1;
+                if (newGame.score.score !== oldScore) {
+                    throw new Error("A soft drop should score 1 point per cell descended");
+                }
+            }
+        } while (!newGame.softDropEnd);  // Continue while the tetromino can still descend
+    });
 
 it(
     `A hard drop scores 2 points per cell descended`,

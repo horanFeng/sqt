@@ -7,20 +7,21 @@
 const Score = {};  //defined an empty object called Score
 
 /**
- * The score object contains information about the score of the game and the number of lines cleared.
- * @typedef {Object} Score
+ * The Score object contains information about the score of the game and the number of lines cleared.
+ * @typedef {Object} Score.Score
  * @property {number} score - The score of the game
  * @property {number} lines_cleared - The number of lines cleared
+ * @property {boolean} last_clear_was_tetris - Whether the last clear was a Tetris
  * @memberof Score
  */
 
 /**
- * Returns a score object for a new Tetris Game.
+ * Returns a Score object for a new Tetris Game.
  * @function
  * @memberof Score
- * @returns {Score.Score} The new score object.
+ * @returns {Score.Score} The new Score object.
  */
-Score.new_score = function () {   //generate a new score object
+Score.new_score = function () {   //generate a new Score object
     return {  //return the property of the object
         score: 0, 
         lines_cleared: 0,
@@ -28,19 +29,17 @@ Score.new_score = function () {   //generate a new score object
     };
 };
 
-
 /**
  * Returns the current level of the game based on the number of lines cleared.
  * Start at level 1, and advance a level every 10 lines cleared.
  * @function
  * @memberof Score
- * @param {Score.Score} score - The score object
+ * @param {Score.Score} score - The Score object
  * @returns {number} The current level
  */
 Score.level = function (score) {
     return Math.floor(score.lines_cleared / 10) + 1;  //the level will advance 1 every 10 lines are cleared 
 };
-
 
 Score.cleared_lines = function(lines, score) { //used to update scoring object
     let points;
@@ -75,7 +74,5 @@ Score.add_points = function(points, score) {
         score: score.score + points
     };
 };
-
-
 
 export default Object.freeze(Score); //freeze
