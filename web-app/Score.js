@@ -4,7 +4,7 @@
  * @version 2022.23
  * This module provides the scoring system for a Tetris Game.
  */
-const Score = {};
+const Score = {};  //defined an empty object called Score
 
 /**
  * The score object contains information about the score of the game and the number of lines cleared.
@@ -20,29 +20,29 @@ const Score = {};
  * @memberof Score
  * @returns {Score.Score} The new score object.
  */
-Score.new_score = function () {
-    return {
-        score: 0,
+Score.new_score = function () {   //generate a new score object
+    return {  //return the property of the object
+        score: 0, 
         lines_cleared: 0,
-        last_clear_was_tetris: false,  // add this line
+        last_clear_was_tetris: false,  
     };
 };
 
 
 /**
  * Returns the current level of the game based on the number of lines cleared.
- * You start at level 1, and advance a level every 10 lines cleared.
+ * Start at level 1, and advance a level every 10 lines cleared.
  * @function
  * @memberof Score
  * @param {Score.Score} score - The score object
  * @returns {number} The current level
  */
 Score.level = function (score) {
-    return Math.floor(score.lines_cleared / 10) + 1;
+    return Math.floor(score.lines_cleared / 10) + 1;  //the level will advance 1 every 10 lines are cleared 
 };
 
 
-Score.cleared_lines = function(lines, score) {
+Score.cleared_lines = function(lines, score) { //used to update scoring object
     let points;
     switch (lines) {
         case 1:
@@ -61,7 +61,7 @@ Score.cleared_lines = function(lines, score) {
             points = 0;
             break;
     }
-    return {
+    return { //return a new object with updated properties
         ...score,
         score: score.score + points,
         lines_cleared: score.lines_cleared + lines,
@@ -78,4 +78,4 @@ Score.add_points = function(points, score) {
 
 
 
-export default Object.freeze(Score);
+export default Object.freeze(Score); //freeze
